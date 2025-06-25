@@ -5,15 +5,14 @@ This project is a simple FastAPI application that demonstrates how to set up a b
 ## Project Structure
 
 ```
-fastapi-server
-├── app
-│   ├── main.py          # Entry point of the FastAPI application
-│   ├── api
-│   │   └── routes.py    # Defines API endpoints and request handlers
-│   └── models
-│       └── __init__.py  # Data models for request validation and response serialization
-├── requirements.txt      # Project dependencies
-└── README.md             # Project documentation
+tutor-log-api
+├── main.py          # Entry point of the FastAPI application
+├── api
+│   └── routes.py    # Defines API endpoints and request handlers
+├── models
+│   └── __init__.py  # Data models for request validation and response serialization
+├── requirements.txt # Project dependencies
+└── README.md        # Project documentation
 ```
 
 ## Setup Instructions
@@ -21,7 +20,7 @@ fastapi-server
 1. Clone the repository:
    ```
    git clone <repository-url>
-   cd fastapi-server
+   cd tutor-log-api
    ```
 
 2. Install the required dependencies:
@@ -31,7 +30,7 @@ fastapi-server
 
 3. Run the application:
    ```
-   uvicorn app.main:app --reload
+   fastapi dev main.py 
    ```
 
 ## Usage
