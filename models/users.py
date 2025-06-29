@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, List
 
 # Users Model
 class UserBase(SQLModel):
@@ -15,6 +16,8 @@ class User(UserBase, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    
+    events: List["Event"] = Relationship(back_populates="owner")
 
 class UserCreate(UserBase):
     pass

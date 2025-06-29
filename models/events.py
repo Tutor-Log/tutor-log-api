@@ -13,6 +13,7 @@ class EventBase(SQLModel):
     end_time: datetime
     repeat_pattern: Optional[RepeatPatternEnum] = None
     repeat_until: Optional[date] = None
+    owner_id: int = Field(foreign_key="users.id")
 
 class Event(EventBase, table=True):
     __tablename__ = "events"
@@ -22,6 +23,7 @@ class Event(EventBase, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     # Relationships - using string forward references
+    owner: Optional["User"] = Relationship(back_populates="events")
     repeat_days: List["EventRepeatDay"] = Relationship(back_populates="event")
     event_pupils: List["EventPupil"] = Relationship(back_populates="event")
 
@@ -41,6 +43,7 @@ class EventUpdate(SQLModel):
     end_time: Optional[datetime] = None
     repeat_pattern: Optional[RepeatPatternEnum] = None
     repeat_until: Optional[date] = None
+    owner_id: Optional[int] = None
 
 # Event Repeat Days Model
 class EventRepeatDayBase(SQLModel):
@@ -60,3 +63,11 @@ class EventRepeatDayCreate(EventRepeatDayBase):
 
 class EventRepeatDayRead(EventRepeatDayBase):
     id: int
+
+class EventRepeatDayUpdate(SQLModel):
+    event_id: Optional[int] = None
+    day_of_week: Optional[int] = None
+
+class EventPupilUpdate(SQLModel):
+    event_id: Optional[int] = None
+    pupil_id: Optional[int] = None

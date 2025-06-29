@@ -17,7 +17,7 @@ class RepeatPatternEnum(str, Enum):
 
 class PaymentModeEnum(str, Enum):
     CASH = "cash"
-    UPI = "UPI"
+    UPI = "upi"
     BANK_TRANSFER = "bank_transfer"
     CARD = "card"
     CHEQUE = "cheque"
