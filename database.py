@@ -4,13 +4,17 @@ from os import environ
 import models
 
 # Database configuration
-DATABASE_URL = environ["DATABASE_URL"]
+DATABASE_URL = environ.get("DATABASE_URL")
+SKIP_DATABASE_SETUP = environ.get("SKIP_DATABASE_SETUP", "false").lower() == "true"
 
 # Create engine
 engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
     """Create database tables"""
+    if (SKIP_DATABASE_SETUP):
+        print("Skipping database setup")
+        return
     SQLModel.metadata.create_all(engine)
 
 def get_session() -> Generator[Session, None, None]:
