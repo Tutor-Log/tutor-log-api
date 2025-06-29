@@ -2,7 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from routers import base, user
+from routers import base, user, pupil
 from database import create_db_and_tables
 
 @asynccontextmanager
@@ -19,3 +19,4 @@ app = FastAPI(
 
 app.include_router(base)
 app.include_router(user)
+app.include_router(pupil)
