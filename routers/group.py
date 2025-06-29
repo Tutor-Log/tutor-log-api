@@ -105,14 +105,14 @@ def delete_group(group_id: int, current_user_id: int, session: Session = Depends
 
 # Pupil Group Membership Operations
 
-@group.post("/{group_id}/members", response_model=PupilGroupMembershipRead, status_code=status.HTTP_201_CREATED)
-def add_pupil_to_group(
+@group.post("/{group_id}/members", response_model=List[PupilGroupMembershipRead], status_code=status.HTTP_201_CREATED)
+def add_pupils_to_group(
     group_id: int,
-    membership: PupilGroupMembershipCreate,
+    memberships: List[PupilGroupMembershipCreate],
     current_user_id: int,
     session: Session = Depends(get_session)
 ):
-    """Add a pupil to a group"""
+    """Add multiple pupils to a group"""
     # Verify group exists and user owns it
     group = session.get(Group, group_id)
     if not group:
@@ -126,27 +126,84 @@ def add_pupil_to_group(
             detail="Not authorized to modify this group"
         )
     
-    # Check if membership already exists
+    # Check if any memberships already exist
+    pupil_ids = [membership.pupil_id for membership in memberships]
     statement = select(PupilGroupMembership).where(
-        PupilGroupMembership.pupil_id == membership.pupil_id,
+        PupilGroupMembership.pupil_id.in_(pupil_ids),
         PupilGroupMembership.group_id == group_id
     )
-    existing_membership = session.exec(statement).first()
-    if existing_membership:
+    existing_memberships = session.exec(statement).all()
+    if existing_memberships:
+        existing_pupil_ids = [m.pupil_id for m in existing_memberships]
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Pupil is already a member of this group"
+            detail=f"Pupils with IDs {existing_pupil_ids} are already members of this group"
         )
     
-    # Ensure the membership has the correct group_id
-    membership_data = membership.model_dump()
-    membership_data["group_id"] = group_id
+    # Create new memberships
+    db_memberships = []
+    for membership in memberships:
+        membership_data = membership.model_dump()
+        membership_data["group_id"] = group_id
+        db_membership = PupilGroupMembership(**membership_data)
+        db_memberships.append(db_membership)
     
-    db_membership = PupilGroupMembership(**membership_data)
-    session.add(db_membership)
+    session.add_all(db_memberships)
     session.commit()
-    session.refresh(db_membership)
-    return db_membership
+    for membership in db_memberships:
+        session.refresh(membership)
+    return db_memberships
+
+@group.put("/{group_id}/members", response_model=List[PupilGroupMembershipRead])
+def update_group_members(
+    group_id: int,
+    memberships: List[PupilGroupMembershipCreate],
+    current_user_id: int,
+    session: Session = Depends(get_session)
+):
+    """Update group members - add new ones and remove those not in the request"""
+    # Verify group exists and user owns it
+    group = session.get(Group, group_id)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    if group.owner_id != current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to modify this group"
+        )
+    
+    # Get requested pupil IDs
+    requested_pupil_ids = [membership.pupil_id for membership in memberships]
+    
+    # Get current memberships
+    statement = select(PupilGroupMembership).where(PupilGroupMembership.group_id == group_id)
+    current_memberships = session.exec(statement).all()
+    
+    # Remove memberships not in the request
+    for membership in current_memberships:
+        if membership.pupil_id not in requested_pupil_ids:
+            session.delete(membership)
+    
+    # Add new memberships
+    db_memberships = []
+    current_pupil_ids = [m.pupil_id for m in current_memberships]
+    for membership in memberships:
+        if membership.pupil_id not in current_pupil_ids:
+            membership_data = membership.model_dump()
+            membership_data["group_id"] = group_id
+            db_membership = PupilGroupMembership(**membership_data)
+            db_memberships.append(db_membership)
+    
+    session.add_all(db_memberships)
+    session.commit()
+    
+    # Get all updated memberships
+    statement = select(PupilGroupMembership).where(PupilGroupMembership.group_id == group_id)
+    updated_memberships = session.exec(statement).all()
+    return updated_memberships
 
 @group.get("/{group_id}/members", response_model=List[PupilGroupMembershipRead])
 def get_group_members(group_id: int, current_user_id: int, session: Session = Depends(get_session)):
