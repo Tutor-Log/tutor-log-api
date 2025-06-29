@@ -14,6 +14,7 @@ class PupilBase(SQLModel):
     date_of_birth: date
     gender: GenderEnum
     enrolled_on: date
+    owner_id: int = Field(foreign_key="users.id")
 
 class Pupil(PupilBase, table=True):
     __tablename__ = "pupils"
@@ -23,6 +24,7 @@ class Pupil(PupilBase, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     # Relationships - using string forward references
+    user: "User" = Relationship(back_populates="pupils")
     group_memberships: List["PupilGroupMembership"] = Relationship(back_populates="pupil")
     event_pupils: List["EventPupil"] = Relationship(back_populates="pupil")
     payments: List["Payment"] = Relationship(back_populates="pupil")

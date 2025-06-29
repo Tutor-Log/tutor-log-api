@@ -8,6 +8,7 @@ from models.pupils import Pupil
 class GroupBase(SQLModel):
     name: str = Field(max_length=255)
     description: Optional[str] = None
+    owner_id: int = Field(foreign_key="users.id")
 
 class Group(GroupBase, table=True):
     __tablename__ = "groups"
@@ -16,6 +17,7 @@ class Group(GroupBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     # Relationships
+    user: Optional["User"] = Relationship(back_populates="groups")
     pupil_memberships: List["PupilGroupMembership"] = Relationship(back_populates="group")
 
 class GroupCreate(GroupBase):
