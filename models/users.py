@@ -18,6 +18,8 @@ class User(UserBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     events: List["Event"] = Relationship(back_populates="owner")
+    pupils: List["Pupil"] = Relationship(back_populates="user")
+    groups: List["Group"] = Relationship(back_populates="user")
 
 class UserCreate(UserBase):
     pass

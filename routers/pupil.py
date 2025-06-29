@@ -9,11 +9,12 @@ from database import get_session
 pupil = APIRouter(prefix="/pupil", tags=["pupil"])
 
 @pupil.post("/", response_model=PupilRead)
-def create_pupil(pupil: PupilCreate, session: Session = Depends(get_session)):
+def create_pupil(pupil: PupilCreate, current_user_id: int, session: Session = Depends(get_session)):
     """Create a new pupil"""
     try:
         # Create new pupil instance
         db_pupil = Pupil.model_validate(pupil)
+        db_pupil.owner_id = current_user_id
         
         # Add to session and commit
         session.add(db_pupil)
@@ -27,6 +28,7 @@ def create_pupil(pupil: PupilCreate, session: Session = Depends(get_session)):
 
 @pupil.get("/", response_model=List[PupilRead])
 def get_pupils(
+    current_user_id: int,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
     search: Optional[str] = Query(None, description="Search by full name or email"),
@@ -45,6 +47,9 @@ def get_pupils(
                 (Pupil.email.ilike(search_term))
             )
         
+        # Filter by owner
+        query = query.where(Pupil.owner_id == current_user_id)
+        
         # Add pagination
         query = query.offset(skip).limit(limit)
         
@@ -55,12 +60,14 @@ def get_pupils(
         raise HTTPException(status_code=500, detail=f"Error fetching pupils: {str(e)}")
 
 @pupil.get("/{pupil_id}", response_model=PupilRead)
-def get_pupil(pupil_id: int, session: Session = Depends(get_session)):
+def get_pupil(pupil_id: int, current_user_id: int, session: Session = Depends(get_session)):
     """Get a specific pupil by ID"""
     try:
         pupil = session.get(Pupil, pupil_id)
         if not pupil:
             raise HTTPException(status_code=404, detail="Pupil not found")
+        if current_user_id and pupil.owner_id != current_user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this pupil")
         return pupil
     except HTTPException:
         raise
@@ -71,6 +78,7 @@ def get_pupil(pupil_id: int, session: Session = Depends(get_session)):
 def update_pupil(
     pupil_id: int, 
     pupil_update: PupilUpdate, 
+    current_user_id: int,
     session: Session = Depends(get_session)
 ):
     """Update a specific pupil"""
@@ -79,6 +87,8 @@ def update_pupil(
         db_pupil = session.get(Pupil, pupil_id)
         if not db_pupil:
             raise HTTPException(status_code=404, detail="Pupil not found")
+        if db_pupil.owner_id != current_user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this pupil")
         
         # Update fields that are provided (not None)
         pupil_data = pupil_update.model_dump(exclude_unset=True)
@@ -103,20 +113,23 @@ def update_pupil(
 @pupil.patch("/{pupil_id}", response_model=PupilRead)
 def patch_pupil(
     pupil_id: int, 
-    pupil_update: PupilUpdate, 
+    pupil_update: PupilUpdate,
+    current_user_id: int,
     session: Session = Depends(get_session)
 ):
     """Partially update a specific pupil (same as PUT for this implementation)"""
-    return update_pupil(pupil_id, pupil_update, session)
+    return update_pupil(pupil_id, pupil_update, current_user_id, session)
 
 @pupil.delete("/{pupil_id}")
-def delete_pupil(pupil_id: int, session: Session = Depends(get_session)):
+def delete_pupil(pupil_id: int, current_user_id: int, session: Session = Depends(get_session)):
     """Delete a specific pupil"""
     try:
         # Get existing pupil
         db_pupil = session.get(Pupil, pupil_id)
         if not db_pupil:
             raise HTTPException(status_code=404, detail="Pupil not found")
+        if db_pupil.owner_id != current_user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this pupil")
         
         # Delete the pupil
         session.delete(db_pupil)
@@ -131,32 +144,40 @@ def delete_pupil(pupil_id: int, session: Session = Depends(get_session)):
 
 @pupil.get("/search/by-name", response_model=List[PupilRead])
 def search_pupils_by_name(
+    current_user_id: int,
     name: str = Query(..., min_length=2, description="Name to search for"),
     session: Session = Depends(get_session)
 ):
     """Search pupils by full name"""
     try:
         query = select(Pupil).where(Pupil.full_name.ilike(f"%{name}%"))
+        query = query.where(Pupil.owner_id == current_user_id)
         pupils = session.exec(query).all()
         return pupils
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching pupils: {str(e)}")
 
 @pupil.get("/filter/by-gender/{gender}", response_model=List[PupilRead])
-def get_pupils_by_gender(gender: str, session: Session = Depends(get_session)):
+def get_pupils_by_gender(
+    gender: str,
+    current_user_id: int,
+    session: Session = Depends(get_session)
+):
     """Get pupils filtered by gender"""
     try:
-        query = select(Pupil).where(Pupil.gender == gender)
+        query = select(Pupil).where(Pupil.gender == gender)    
+        query = query.where(Pupil.owner_id == current_user_id)
         pupils = session.exec(query).all()
         return pupils
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error filtering pupils by gender: {str(e)}")
 
 @pupil.get("/count/total")
-def get_pupils_count(session: Session = Depends(get_session)):
+def get_pupils_count(current_user_id: int, session: Session = Depends(get_session)):
     """Get total count of pupils"""
     try:
         query = select(Pupil)
+        query = query.where(Pupil.owner_id == current_user_id)
         pupils = session.exec(query).all()
         return {"total_pupils": len(pupils)}
     except Exception as e:
