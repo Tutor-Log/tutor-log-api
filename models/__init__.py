@@ -1,3 +1,6 @@
-from pydantic import BaseModel
-
-# This file is intentionally left blank.
+import models.event_pupil
+import models.events
+import models.groups
+import models.payments
+import models.pupils
+import models.users
