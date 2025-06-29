@@ -18,8 +18,8 @@ class Event(EventBase, table=True):
     __tablename__ = "events"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     # Relationships - using string forward references
     repeat_days: List["EventRepeatDay"] = Relationship(back_populates="event")

@@ -13,7 +13,7 @@ class Group(GroupBase, table=True):
     __tablename__ = "groups"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     # Relationships
     pupil_memberships: List["PupilGroupMembership"] = Relationship(back_populates="group")
@@ -38,7 +38,7 @@ class PupilGroupMembership(PupilGroupMembershipBase, table=True):
     __tablename__ = "pupil_group_membership"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    joined_at: datetime = Field(default_factory=datetime.utcnow)
+    joined_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
     
     # Relationships
     pupil: Optional[Pupil] = Relationship(back_populates="group_memberships")
