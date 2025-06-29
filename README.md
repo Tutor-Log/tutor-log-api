@@ -37,7 +37,7 @@ tutor-log-api
 
 3. Set required envionment variables in `.env` file:
    ```
-   DATABASE_URL=<db_connection_string>
+   POSTGRESQLCONNSTR_TUTORLOG=<db_connection_string>
    SKIP_DATABASE_SETUP=true
    ALLOWED_ORIGINS=http://localhost:3000
    ``` 

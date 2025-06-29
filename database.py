@@ -4,7 +4,9 @@ from os import environ
 import models
 
 # Database configuration
-DATABASE_URL = environ.get("DATABASE_URL")
+DATABASE_URL = environ.get("POSTGRESQLCONNSTR_TUTORLOG")
+if not DATABASE_URL:
+    raise ValueError("POSTGRESQLCONNSTR_TUTORLOG environment variable is not set")
 SKIP_DATABASE_SETUP = environ.get("SKIP_DATABASE_SETUP", "false").lower() == "true"
 
 # Create engine
