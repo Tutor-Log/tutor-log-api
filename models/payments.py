@@ -1,5 +1,5 @@
 from typing import Optional
-from datetime import datetime, date
+from datetime import datetime, timezone, date
 from decimal import Decimal
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -20,7 +20,7 @@ class Payment(PaymentBase, table=True):
     __tablename__ = "payments"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Relationships
     pupil: Optional[Pupil] = Relationship(back_populates="payments")

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime, date, timedelta
+from datetime import datetime, timezone, date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select, and_, or_
 from sqlalchemy.orm import selectinload
@@ -50,8 +50,8 @@ def create_event(
     # Create the event
     db_event = Event.model_validate(event_data)
     db_event.owner_id = owner_id
-    db_event.created_at = datetime.now(datetime.timezone.utc)
-    db_event.updated_at = datetime.now(datetime.timezone.utc)
+    db_event.created_at = datetime.now(timezone.utc)
+    db_event.updated_at = datetime.now(timezone.utc)
     
     session.add(db_event)
     session.commit()
@@ -180,7 +180,7 @@ def update_event(
         # Set the repeat_until date for the original event to yesterday
         today = date.today()
         event.repeat_until = today - timedelta(days=1)
-        event.updated_at = datetime.now(datetime.timezone.utc)
+        event.updated_at = datetime.now(timezone.utc)
         session.add(event)
         
         # Update the new event with the changes
@@ -194,8 +194,8 @@ def update_event(
             time_diff = new_event.end_time - event.start_time
             new_event.end_time = new_event.start_time + time_diff
         
-        new_event.created_at = datetime.now(datetime.timezone.utc)
-        new_event.updated_at = datetime.now(datetime.timezone.utc)
+        new_event.created_at = datetime.now(timezone.utc)
+        new_event.updated_at = datetime.now(timezone.utc)
         session.add(new_event)
         
         # Copy repeat days to new event if it's weekly
@@ -221,7 +221,7 @@ def update_event(
                 detail="Start time must be before end time"
             )
     
-    event.updated_at = datetime.now(datetime.timezone.utc)
+    event.updated_at = datetime.now(timezone.utc)
     
     # Update repeat days if provided and it's a weekly repeat
     if repeat_days is not None and (
@@ -266,7 +266,7 @@ def delete_event(
         # For repeat events, we could set repeat_until to today
         # This effectively "deletes" future instances
         event.repeat_until = date.today()
-        event.updated_at = datetime.now(datetime.timezone.utc)
+        event.updated_at = datetime.now(timezone.utc)
         session.add(event)
         session.commit()
         return {"message": "Future instances of repeat event deleted"}

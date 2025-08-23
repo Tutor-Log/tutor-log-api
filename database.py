@@ -1,7 +1,10 @@
+from dotenv import load_dotenv
 from sqlmodel import SQLModel, create_engine, Session
 from typing import Generator
 from os import environ
-import models
+
+# Load environment variables from .env file
+load_dotenv()  
 
 # Database configuration
 DATABASE_URL = environ.get("POSTGRESQLCONNSTR_TUTORLOG")
