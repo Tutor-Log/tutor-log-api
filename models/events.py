@@ -1,5 +1,5 @@
 from typing import Optional, List
-from datetime import datetime, date
+from datetime import datetime, timezone, date
 from sqlmodel import SQLModel, Field, Relationship
 
 from models.utils.enums import RepeatPatternEnum, EventTypeEnum
@@ -19,8 +19,8 @@ class Event(EventBase, table=True):
     __tablename__ = "events"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Relationships - using string forward references
     owner: Optional["User"] = Relationship(back_populates="events")

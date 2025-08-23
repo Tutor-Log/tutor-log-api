@@ -1,5 +1,5 @@
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone, timezone
 from sqlmodel import SQLModel, Field, Relationship
 
 # Event Pupils (Junction Table)
@@ -11,7 +11,7 @@ class EventPupil(EventPupilBase, table=True):
     __tablename__ = "event_pupils"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    added_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Relationships - using string forward references
     event: Optional["Event"] = Relationship(back_populates="event_pupils")

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.pupils import Pupil, PupilCreate, PupilRead, PupilUpdate
 from database import get_session
@@ -96,7 +96,7 @@ def update_pupil(
             setattr(db_pupil, field, value)
         
         # Update the updated_at timestamp
-        db_pupil.updated_at = datetime.now(datetime.timezone.utc)
+        db_pupil.updated_at = datetime.now(timezone.utc)
         
         # Commit changes
         session.add(db_pupil)

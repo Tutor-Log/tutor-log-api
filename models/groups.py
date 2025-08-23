@@ -1,5 +1,5 @@
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field, Relationship
 
 from models.pupils import Pupil
@@ -14,7 +14,7 @@ class Group(GroupBase, table=True):
     __tablename__ = "groups"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Relationships
     user: Optional["User"] = Relationship(back_populates="groups")
@@ -40,7 +40,7 @@ class PupilGroupMembership(PupilGroupMembershipBase, table=True):
     __tablename__ = "pupil_group_membership"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    joined_at: datetime = Field(default_factory=lambda: datetime.now(datetime.timezone.utc))
+    joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Relationships
     pupil: Optional[Pupil] = Relationship(back_populates="group_memberships")
