@@ -4,7 +4,7 @@ from datetime import datetime, date, timedelta
 from models.events import (
     Event
 )
-from models.utils.enums import RepeatPatternEnum
+from models.utils.enums import EventTypeEnum, RepeatPatternEnum
 
 # Helper function to generate repeat event instances
 def generate_repeat_instances(
@@ -15,7 +15,7 @@ def generate_repeat_instances(
     """Generate event instances for repeat events within a date range"""
     instances = []
     
-    if not event.repeat_pattern:
+    if not event.repeat_pattern or event.event_type == EventTypeEnum.ONCE:
         # Single event - check if it falls within the range
         event_date = event.start_time.date()
         if start_date <= event_date <= end_date:

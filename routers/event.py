@@ -18,7 +18,7 @@ event = APIRouter(prefix="/events", tags=["events"])
 def create_event(
     event_data: EventCreate,
     repeat_days: Optional[List[int]] = None,
-    owner_id: int = Query(..., description="ID of the event owner"),
+    current_user_id: int = Query(..., description="ID of the event owner"),
     session: Session = Depends(get_session)
 ):
     """Create a new event with optional repeat days"""
@@ -40,7 +40,7 @@ def create_event(
         )
     
     # Validate repeat pattern logic
-    if event_data.repeat_pattern and event_data.repeat_pattern != RepeatPatternEnum.NONE:
+    if event_data.repeat_pattern:
         if event_data.repeat_pattern == RepeatPatternEnum.WEEKLY and not repeat_days:
             raise HTTPException(
                 status_code=400,
@@ -49,7 +49,7 @@ def create_event(
     
     # Create the event
     db_event = Event.model_validate(event_data)
-    db_event.owner_id = owner_id
+    db_event.owner_id = current_user_id
     db_event.created_at = datetime.now(timezone.utc)
     db_event.updated_at = datetime.now(timezone.utc)
     
@@ -104,12 +104,13 @@ def get_events(
         or_(
             # Single events within range
             and_(
-                Event.repeat_pattern.is_(None),
+                Event.event_type.is_(EventTypeEnum.ONCE),
                 Event.start_time >= datetime.combine(start_date, datetime.min.time()),
                 Event.start_time <= datetime.combine(end_date, datetime.max.time())
             ),
             # Repeat events that start before or during the range and don't end before the range
             and_(
+                Event.event_type.is_(EventTypeEnum.REPEAT),
                 Event.repeat_pattern.isnot(None),
                 Event.start_time <= datetime.combine(end_date, datetime.max.time()),
                 or_(
@@ -132,7 +133,7 @@ def get_events(
         all_instances.extend(instances)
     
     # Sort by start time
-    all_instances.sort(key=lambda x: x["start_time"])
+    all_instances.sort(key=lambda x: x["start_time"])  
     
     return all_instances
 
@@ -147,7 +148,7 @@ def get_event(event_id: int, session: Session = Depends(get_session)):
 @event.put("/{event_id}", response_model=EventRead)
 def update_event(
     event_id: int,
-    event_update: EventUpdate,
+    event_data: EventUpdate,
     repeat_days: Optional[List[int]] = None,
     update_future_only: bool = Query(False, description="For repeat events, only update future instances"),
     current_user_id: int = Query(..., description="ID of the current user"),
@@ -184,7 +185,7 @@ def update_event(
         session.add(event)
         
         # Update the new event with the changes
-        update_data = event_update.model_dump(exclude_unset=True)
+        update_data = event_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(new_event, field, value)
         
@@ -209,12 +210,12 @@ def update_event(
         return new_event
     
     # Update event fields for non-repeat or all instances
-    update_data = event_update.model_dump(exclude_unset=True)
+    update_data = event_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(event, field, value)
     
     # Validate time logic if times are being updated
-    if event_update.start_time or event_update.end_time:
+    if event_data.start_time or event_data.end_time:
         if event.start_time >= event.end_time:
             raise HTTPException(
                 status_code=400,
@@ -226,7 +227,7 @@ def update_event(
     # Update repeat days if provided and it's a weekly repeat
     if repeat_days is not None and (
         event.repeat_pattern == RepeatPatternEnum.WEEKLY or 
-        event_update.repeat_pattern == RepeatPatternEnum.WEEKLY
+        event_data.repeat_pattern == RepeatPatternEnum.WEEKLY
     ):
         # Remove existing repeat days
         existing_repeat_days = session.exec(
