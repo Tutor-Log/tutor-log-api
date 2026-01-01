@@ -12,7 +12,7 @@ def create_user(*, session: Session = Depends(get_session), user: UserCreate):
     # Check if user already exists (assuming email is unique)
     existing_user = session.exec(select(User).where(User.email == user.email)).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="User with this email already exists")
+        return existing_user
     
     db_user = User.model_validate(user)
     session.add(db_user)
