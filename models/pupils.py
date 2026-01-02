@@ -7,12 +7,12 @@ from models.utils.enums import GenderEnum
 # Pupil Model
 class PupilBase(SQLModel):
     full_name: str = Field(max_length=255)
-    email: Optional[str] = Field(default=None, max_length=320, unique=True)
+    email: str = Field(max_length=320, unique=True)
     mobile: str = Field(max_length=15)
-    father_name: str = Field(max_length=255)
-    mother_name: str = Field(max_length=255)
-    date_of_birth: date
-    gender: GenderEnum
+    father_name: Optional[str] = Field(default=None, max_length=255)
+    mother_name: Optional[str] = Field(default=None, max_length=255)
+    date_of_birth: Optional[date] = Field(default=None)
+    gender: Optional[GenderEnum] = Field(default=None)
     enrolled_on: date
     owner_id: int = Field(foreign_key="users.id")
 
