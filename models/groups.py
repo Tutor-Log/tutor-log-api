@@ -6,7 +6,7 @@ from models.pupils import Pupil
 
 # Group Model
 class GroupBase(SQLModel):
-    name: str = Field(max_length=255)
+    name: str = Field(max_length=255, unique=True)
     description: Optional[str] = None
     owner_id: int = Field(foreign_key="users.id")
 
