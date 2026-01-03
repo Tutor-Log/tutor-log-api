@@ -4,7 +4,7 @@ from typing import Generator
 from os import environ
 
 # Load environment variables from .env file
-load_dotenv()  
+load_dotenv()
 
 # Database configuration
 DATABASE_URL = environ.get("POSTGRESQLCONNSTR_TUTORLOG")
