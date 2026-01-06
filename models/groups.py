@@ -52,3 +52,6 @@ class PupilGroupMembershipCreate(PupilGroupMembershipBase):
 class PupilGroupMembershipRead(PupilGroupMembershipBase):
     id: int
     joined_at: datetime
+
+class PupilGroupMembershipReadWithPupilDetails(PupilGroupMembershipRead):
+    pupil_details: Optional[Pupil] = None

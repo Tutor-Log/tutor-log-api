@@ -9,7 +9,9 @@ from models.groups import (
     GroupUpdate,
     PupilGroupMembership,
     PupilGroupMembershipCreate,
-    PupilGroupMembershipRead
+    PupilGroupMembershipRead,
+    Pupil,
+    PupilGroupMembershipReadWithPupilDetails
 )
 
 group = APIRouter(prefix="/group", tags=["groups"])
@@ -211,25 +213,37 @@ def update_group_members(
     updated_memberships = session.exec(statement).all()
     return updated_memberships
 
-@group.get("/{group_id}/members", response_model=List[PupilGroupMembershipRead])
+from sqlalchemy.orm import selectinload
+
+@group.get("/{group_id}/members", response_model=List[PupilGroupMembershipReadWithPupilDetails])
 def get_group_members(group_id: int, current_user_id: int, session: Session = Depends(get_session)):
-    """Get all members of a group"""
-    # Verify group exists and user owns it
+    # 1. Verify group ownership
     group = session.get(Group, group_id)
     if not group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Group not found"
-        )
+        raise HTTPException(status_code=404, detail="Group not found")
     if group.owner_id != current_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this group"
-        )
-    
-    statement = select(PupilGroupMembership).where(PupilGroupMembership.group_id == group_id)
-    memberships = session.exec(statement).all()
-    return memberships
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # 2. Join the tables in the query
+    # We select both the Membership and the Pupil details at once
+    statement = (
+        select(PupilGroupMembership, Pupil)
+        .join(Pupil, PupilGroupMembership.pupil_id == Pupil.id)
+        .where(PupilGroupMembership.group_id == group_id)
+    )
+    results = session.exec(statement).all()
+
+    # 3. Format the response
+    # results is a list of tuples: [(Membership, Pupil), (Membership, Pupil), ...]
+    memberships_with_details = []
+    for membership, pupil in results:
+        # Create a dictionary or use the Read schema
+        # This assumes your PupilGroupMembershipReadWithPupilDetails schema expects 'pupil_details'
+        m_data = membership.model_dump()
+        m_data["pupil_details"] = pupil
+        memberships_with_details.append(m_data)
+
+    return memberships_with_details
 
 @group.delete("/{group_id}/members/{pupil_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_pupil_from_group(
