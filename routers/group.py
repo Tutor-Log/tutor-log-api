@@ -100,6 +100,12 @@ def delete_group(group_id: int, current_user_id: int, session: Session = Depends
             detail="Not authorized to delete this group"
         )
     
+    # Delete all group memberships first
+    statement = select(PupilGroupMembership).where(PupilGroupMembership.group_id == group_id)
+    memberships = session.exec(statement).all()
+    for membership in memberships:
+        session.delete(membership)
+    
     session.delete(group)
     session.commit()
 
