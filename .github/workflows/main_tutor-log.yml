@@ -65,9 +65,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_845B325C0DC74A75A16E348AC91FF49F }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8A5D2657850C47959EE5EFEE706E0F6A }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D9AEABA42CAC46408F10FDB65AB2A830 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_683C839D8F2F4D1D9AF419A972B59F98 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_7F343363F3E94EC6810457FA4FD17138 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D2809D076BCC47DFBC0E2659463A3F99 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -76,3 +76,4 @@ jobs:
           app-name: 'tutor-log-web-app'
           slot-name: 'Production'
           
+
