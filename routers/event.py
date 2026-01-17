@@ -104,13 +104,13 @@ def get_events(
         or_(
             # Single events within range
             and_(
-                Event.event_type.is_(EventTypeEnum.ONCE),
+                Event.event_type == EventTypeEnum.ONCE,
                 Event.start_time >= datetime.combine(start_date, datetime.min.time()),
                 Event.start_time <= datetime.combine(end_date, datetime.max.time())
             ),
             # Repeat events that start before or during the range and don't end before the range
             and_(
-                Event.event_type.is_(EventTypeEnum.REPEAT),
+                Event.event_type == EventTypeEnum.REPEAT,
                 Event.repeat_pattern.isnot(None),
                 Event.start_time <= datetime.combine(end_date, datetime.max.time()),
                 or_(
