@@ -9,7 +9,7 @@ from models.events import (
     Event, EventCreate, EventRead, EventUpdate,
     EventRepeatDay, EventRepeatDayCreate, EventRepeatDayRead, EventRepeatDayUpdate, EventPupilUpdate
 )
-from models.event_pupil import EventPupil, EventPupilCreate, EventPupilRead
+from models.event_pupil import EventPupil, EventPupilCreate, EventPupilRead, EventPupilWithDetails
 from models.utils.enums import RepeatPatternEnum, EventTypeEnum
 from .utils.helpers import generate_repeat_instances
 event = APIRouter(prefix="/events", tags=["events"])
@@ -382,17 +382,17 @@ def delete_event_repeat_days(
         session.delete(repeat_day)
     session.commit()
 
-@event.get("/{event_id}/pupils", response_model=List[EventPupilRead])
+@event.get("/{event_id}/pupils", response_model=List[EventPupilWithDetails])
 def get_event_pupils(
     event_id: int,
     session: Session = Depends(get_session)
 ):
-    """Get all pupils assigned to an event"""
+    """Get all pupils assigned to an event with full pupil details"""
     event = session.get(Event, event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     
-    statement = select(EventPupil).where(EventPupil.event_id == event_id)
+    statement = select(EventPupil).where(EventPupil.event_id == event_id).options(selectinload(EventPupil.pupil))
     event_pupils = session.exec(statement).all()
     return event_pupils
 
