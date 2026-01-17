@@ -18,10 +18,11 @@ event = APIRouter(prefix="/events", tags=["events"])
 def create_event(
     event_data: EventCreate,
     repeat_days: Optional[List[int]] = None,
+    pupil_ids: Optional[List[int]] = None,
     current_user_id: int = Query(..., description="ID of the event owner"),
     session: Session = Depends(get_session)
 ):
-    """Create a new event with optional repeat days"""
+    """Create a new event with optional repeat days and pupil assignments"""
     
     # Validate repeat days if provided
     if repeat_days:
@@ -62,6 +63,14 @@ def create_event(
         for day in repeat_days:
             repeat_day = EventRepeatDay(event_id=db_event.id, day_of_week=day)
             session.add(repeat_day)
+        session.commit()
+        session.refresh(db_event)
+    
+    # Add pupils to event if provided
+    if pupil_ids:
+        for pupil_id in pupil_ids:
+            event_pupil = EventPupil(event_id=db_event.id, pupil_id=pupil_id)
+            session.add(event_pupil)
         session.commit()
         session.refresh(db_event)
     
