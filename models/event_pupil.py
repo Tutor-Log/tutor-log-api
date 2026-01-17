@@ -2,6 +2,9 @@ from typing import Optional
 from datetime import datetime, timezone, timezone
 from sqlmodel import SQLModel, Field, Relationship
 
+# Import PupilRead for the detailed response
+from models.pupils import PupilRead
+
 # Event Pupils (Junction Table)
 class EventPupilBase(SQLModel):
     event_id: int = Field(foreign_key="events.id")
@@ -23,3 +26,7 @@ class EventPupilCreate(EventPupilBase):
 class EventPupilRead(EventPupilBase):
     id: int
     added_at: datetime
+
+class EventPupilWithDetails(EventPupilRead):
+    """EventPupil with full pupil details included"""
+    pupil: PupilRead
