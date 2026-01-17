@@ -11,6 +11,7 @@ class EventTypeEnum(str, Enum):
     REPEAT = "repeat"
 
 class RepeatPatternEnum(str, Enum):
+    DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     CUSTOM_DAYS = "custom_days"
